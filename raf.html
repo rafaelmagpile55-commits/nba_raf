@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Court Side</title>
+<style>
+  :root {
+    --ink: #101a2b;
+    --ink-soft: #1c2a42;
+    --paper: #f3f5f8;
+    --mute: #5d6879;
+    --line: #d8dde6;
+    --orange: #f26b21;
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    line-height: 1.5;
+  }
+  h1, h2 { font-family: Georgia, "Times New Roman", serif; letter-spacing: -0.01em; }
+
+  .btn {
+    font: inherit; font-weight: 600; cursor: pointer;
+    border: 0; border-radius: 8px; padding: .75rem 1rem;
+    background: var(--orange); color: #fff; width: 100%;
+  }
+  .btn:hover { background: #d95a14; }
+  .btn:disabled { opacity: .55; cursor: wait; }
+  .btn-ghost {
+    width: auto; background: transparent; color: #fff;
+    border: 1px solid rgba(255,255,255,.5); padding: .4rem .8rem;
+  }
+  .btn-ghost:hover { background: rgba(255,255,255,.12); }
+  .btn:focus-visible, input:focus-visible, .tabs button:focus-visible, .photo-btn:focus-visible {
+    outline: 3px solid var(--orange); outline-offset: 2px;
+  }
+
+  label { display: block; font-weight: 600; margin: 1rem 0 .25rem; }
+  input[type="text"], input[type="password"] {
+    width: 100%; font: inherit; padding: .65rem .75rem;
+    border: 1px solid var(--line); border-radius: 8px; background: #fff;
+  }
+  .hint { margin: .35rem 0 0; color: var(--mute); font-size: .9rem; }
+  .error { min-height: 1.5rem; margin: .75rem 0; color: #b42318; }
+
+  /* ---------- sign in ---------- */
+  .auth-page {
+    min-height: 100vh; display: grid; place-items: center;
+    padding: 1.5rem; background: var(--ink);
+  }
+  .auth-card {
+    width: 100%; max-width: 400px;
+    background: var(--paper); border-radius: var(--radius); padding: 2rem;
+  }
+  .auth-card h1 { margin: 0; font-size: 2rem; }
+  .sub { margin: .25rem 0 1.25rem; color: var(--mute); }
+  .tabs { display: flex; border-bottom: 2px solid var(--line); }
+  .tabs button {
+    flex: 1; font: inherit; background: none; border: 0; padding: .6rem;
+    cursor: pointer; color: var(--mute);
+    border-bottom: 3px solid transparent; margin-bottom: -2px;
+  }
+  .tabs button[aria-selected="true"] {
+    color: var(--ink); font-weight: 600; border-bottom-color: var(--orange);
+  }
+
+  /* ---------- roster ---------- */
+  .topbar {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 1rem 1.5rem; background: var(--ink); color: #fff;
+  }
+  .topbar h1 { margin: 0; font-size: 1.4rem; }
+  .who { display: flex; align-items: center; gap: 1rem; }
+  .roster-wrap { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem 3rem; }
+  .roster-wrap h2 { margin: 0 0 .25rem; font-size: 1.8rem; }
+  .roster-wrap .tip { margin: 0 0 1.25rem; color: var(--mute); }
+  .roster {
+    list-style: none; margin: 0; padding: 0;
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 1.25rem;
+  }
+  .photo-btn {
+    position: relative; display: grid; place-items: center; width: 100%;
+    aspect-ratio: 3 / 4; border: 0; padding: 0; cursor: pointer;
+    border-radius: var(--radius); overflow: hidden;
+    background: linear-gradient(160deg, var(--ink-soft), var(--ink));
+  }
+  .photo-btn img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .initials { font-family: Georgia, serif; font-size: 3rem; color: rgba(255,255,255,.35); }
+  .add-photo {
+    position: absolute; left: .6rem; top: .6rem;
+    font-size: .8rem; color: #fff; background: rgba(16,26,43,.7);
+    padding: .15rem .5rem; border-radius: 99px;
+  }
+  /* the big jersey number is the one loud element */
+  .number {
+    position: absolute; right: .6rem; bottom: .1rem;
+    font-family: Georgia, serif; font-weight: 700; font-size: 4.5rem; line-height: 1;
+    color: var(--orange); text-shadow: 0 2px 0 rgba(16,26,43,.6);
+  }
+  .name { margin: .6rem 0 0; font-weight: 600; }
+</style>
+</head>
+<body>
+
+<!-- SIGN IN / CREATE ACCOUNT -->
+<div class="auth-page" id="auth-view">
+  <main class="auth-card">
+    <h1>Court Side</h1>
+    <p class="sub">Sign in to see the roster.</p>
+
+    <div class="tabs" role="tablist">
+      <button type="button" role="tab" id="tab-login" aria-selected="true">Sign in</button>
+      <button type="button" role="tab" id="tab-register" aria-selected="false">Create account</button>
+    </div>
+
+    <form id="auth-form" novalidate>
+      <label for="username">Username</label>
+      <input id="username" type="text" autocomplete="username" maxlength="20">
+
+      <label for="password">Password</label>
+      <input id="password" type="password" autocomplete="current-password">
+      <p class="hint" id="hint" hidden>At least 8 characters.</p>
+
+      <p id="error" class="error" role="alert"></p>
+      <button class="btn" id="submit" type="submit">Sign in</button>
+    </form>
+  </main>
+</div>
+
+<!-- ROSTER -->
+<div id="app-view" hidden>
+  <header class="topbar">
+    <h1>Court Side</h1>
+    <div class="who">
+      <span id="who"></span>
+      <button class="btn btn-ghost" id="logout" type="button">Sign out</button>
+    </div>
+  </header>
+  <main class="roster-wrap">
+    <h2>The roster</h2>
+    <p class="tip">Click a card to add a photo from your device. It stays saved in this browser only.</p>
+    <ul id="roster" class="roster"></ul>
+  </main>
+  <input type="file" id="photo-input" accept="image/*" hidden>
+</div>
+
+<script>
+"use strict";
+
+/* ================= data ================= */
+const PLAYERS = [
+  { name: "LeBron James", number: 23 },
+  { name: "Stephen Curry", number: 30 },
+  { name: "Nikola Jokić", number: 15 },
+  { name: "Giannis Antetokounmpo", number: 34 },
+  { name: "Luka Dončić", number: 77 },
+  { name: "Jayson Tatum", number: 0 },
+  { name: "Victor Wembanyama", number: 1 },
+  { name: "Shai Gilgeous-Alexander", number: 2 },
+];
+
+const USERS_KEY = "courtside-users";
+const PHOTOS_KEY = "courtside-photos";
+const SESSION_KEY = "courtside-session";
+
+/* ================= storage helpers ================= */
+function read(key, fallback) {
+  try {
+    const v = JSON.parse(localStorage.getItem(key));
+    return v === null || v === undefined ? fallback : v;
+  } catch { return fallback; }
+}
+function write(key, value) {
+  try { localStorage.setItem(key, JSON.stringify(value)); return true; }
+  catch { return false; }
+}
+function getSession() {
+  try { return sessionStorage.getItem(SESSION_KEY); } catch { return null; }
+}
+function setSession(name) {
+  try {
+    if (name) sessionStorage.setItem(SESSION_KEY, name);
+    else sessionStorage.removeItem(SESSION_KEY);
+  } catch { /* ignore */ }
+}
+
+/* ================= password hashing (PBKDF2) ================= */
+const toHex = (bytes) => Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+const fromHex = (hex) => new Uint8Array(hex.match(/.{2}/g).map((h) => parseInt(h, 16)));
+
+async function hashPassword(password, saltHex) {
+  if (!(window.crypto && crypto.subtle)) {
+    throw new Error("This browser can't hash passwords securely. Try Chrome, Edge, or Firefox.");
+  }
+  const key = await crypto.subtle.importKey(
+    "raw", new TextEncoder().encode(password), "PBKDF2", false, ["deriveBits"]
+  );
+  const bits = await crypto.subtle.deriveBits(
+    { name: "PBKDF2", salt: fromHex(saltHex), iterations: 150000, hash: "SHA-256" }, key, 256
+  );
+  return toHex(new Uint8Array(bits));
+}
+
+async function register(username, password) {
+  const name = username.trim().toLowerCase();
+  if (!/^[a-z0-9_]{3,20}$/.test(name)) {
+    throw new Error("Username must be 3-20 characters: letters, numbers, underscore.");
+  }
+  if (password.length < 8) throw new Error("Password must be at least 8 characters.");
+  const users = read(USERS_KEY, {});
+  if (users[name]) throw new Error("That username is taken.");
+  const salt = toHex(crypto.getRandomValues(new Uint8Array(16)));
+  users[name] = { salt, hash: await hashPassword(password, salt) };
+  if (!write(USERS_KEY, users)) throw new Error("Can't save in this browser. Check that storage is allowed.");
+  return name;
+}
+
+async function login(username, password) {
+  const name = username.trim().toLowerCase();
+  const user = read(USERS_KEY, {})[name];
+  const salt = user ? user.salt : "00".repeat(16);
+  const hash = await hashPassword(password, salt);
+  if (!user || hash !== user.hash) throw new Error("Wrong username or password.");
+  return name;
+}
+
+/* ================= elements ================= */
+const authView = document.getElementById("auth-view");
+const appView = document.getElementById("app-view");
+const form = document.getElementById("auth-form");
+const errorEl = document.getElementById("error");
+const submitBtn = document.getElementById("submit");
+const tabLogin = document.getElementById("tab-login");
+const tabRegister = document.getElementById("tab-register");
+const passwordEl = document.getElementById("password");
+const hintEl = document.getElementById("hint");
+const rosterEl = document.getElementById("roster");
+const photoInput = document.getElementById("photo-input");
+
+let mode = "login";
+let pickingFor = null;
+
+/* ================= auth UI ================= */
+function setMode(next) {
+  mode = next;
+  const isLogin = mode === "login";
+  tabLogin.setAttribute("aria-selected", String(isLogin));
+  tabRegister.setAttribute("aria-selected", String(!isLogin));
+  submitBtn.textContent = isLogin ? "Sign in" : "Create account";
+  passwordEl.autocomplete = isLogin ? "current-password" : "new-password";
+  hintEl.hidden = isLogin;
+  errorEl.textContent = "";
+}
+tabLogin.addEventListener("click", () => setMode("login"));
+tabRegister.addEventListener("click", () => setMode("register"));
+
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  errorEl.textContent = "";
+  submitBtn.disabled = true;
+  try {
+    const u = document.getElementById("username").value;
+    const p = passwordEl.value;
+    const name = mode === "login" ? await login(u, p) : await register(u, p);
+    setSession(name);
+    form.reset();
+    showApp(name);
+  } catch (err) {
+    errorEl.textContent = err.message;
+  } finally {
+    submitBtn.disabled = false;
+  }
+});
+
+document.getElementById("logout").addEventListener("click", () => {
+  setSession(null);
+  appView.hidden = true;
+  authView.hidden = false;
+  setMode("login");
+});
+
+/* ================= roster ================= */
+function initials(name) {
+  return name.split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase();
+}
+
+function renderRoster() {
+  const photos = read(PHOTOS_KEY, {});
+  rosterEl.innerHTML = "";
+  PLAYERS.forEach((p) => {
+    const li = document.createElement("li");
+
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "photo-btn";
+    btn.setAttribute("aria-label", `Add or change photo for ${p.name}`);
+
+    const ini = document.createElement("span");
+    ini.className = "initials";
+    ini.textContent = initials(p.name);
+    btn.append(ini);
+
+    if (photos[p.name]) {
+      const img = document.createElement("img");
+      img.alt = p.name;
+      img.src = photos[p.name];
+      btn.append(img);
+    } else {
+      const tag = document.createElement("span");
+      tag.className = "add-photo";
+      tag.textContent = "Add photo";
+      btn.append(tag);
+    }
+
+    const num = document.createElement("span");
+    num.className = "number";
+    num.textContent = p.number;
+    btn.append(num);
+
+    btn.addEventListener("click", () => {
+      pickingFor = p.name;
+      photoInput.value = "";
+      photoInput.click();
+    });
+
+    const name = document.createElement("p");
+    name.className = "name";
+    name.textContent = p.name;
+
+    li.append(btn, name);
+    rosterEl.append(li);
+  });
+}
+
+// shrink the picked image so it fits in browser storage
+function resizeToDataUrl(file, maxWidth = 420) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error("Couldn't read that file."));
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = () => reject(new Error("That file isn't a valid image."));
+      img.onload = () => {
+        const scale = Math.min(1, maxWidth / img.width);
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL("image/jpeg", 0.85));
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+photoInput.addEventListener("change", async () => {
+  const file = photoInput.files[0];
+  if (!file || !pickingFor) return;
+  try {
+    const photos = read(PHOTOS_KEY, {});
+    photos[pickingFor] = await resizeToDataUrl(file);
+    if (!write(PHOTOS_KEY, photos)) throw new Error("Browser storage is full.");
+    renderRoster();
+  } catch (err) {
+    alert(err.message);
+  }
+});
+
+function showApp(name) {
+  document.getElementById("who").textContent = name;
+  authView.hidden = true;
+  appView.hidden = false;
+  renderRoster();
+}
+
+/* ================= start ================= */
+const existing = getSession();
+if (existing) showApp(existing);
+</script>
+</body>
+</html>
